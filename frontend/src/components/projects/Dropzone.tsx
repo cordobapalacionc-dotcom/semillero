@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import type { DragEvent } from 'react';
-import { LIMITS } from '../../../shared/validation.js';
+import { LIMITS } from '../../shared/validation.js';
 import { Icon } from '../ui/Icon';
 
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];

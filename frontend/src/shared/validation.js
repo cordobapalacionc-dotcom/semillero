@@ -1,4 +1,7 @@
-// Esquemas de validación compartidos entre el servidor (Express) y el cliente (React).
+// Esquemas de validación usados por el cliente (React), para validar formularios en vivo.
+// Copia hermana en backend/shared/validation.js: frontend y backend se despliegan por
+// separado y no comparten disco en producción, así que el archivo vive duplicado a propósito.
+// Si cambias una regla aquí, replícala también en la copia del backend.
 import { z } from 'zod';
 
 export const LIMITS = {

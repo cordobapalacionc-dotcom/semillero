@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LIMITS } from '../../../shared/validation.js';
+import { LIMITS } from '../../shared/validation.js';
 import { Icon } from '../ui/Icon';
 
 export interface SortableItem {

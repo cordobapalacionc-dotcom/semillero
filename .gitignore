@@ -14,15 +14,15 @@ dist-ssr
 *.tsbuildinfo
 
 # Backend runtime data
-server/node_modules
-server/galeria.db
-server/.jwt-secret
-server/.env
-server/galeria.backup*.db
-server/galeria.db-*
+backend/node_modules
+backend/galeria.db
+backend/.jwt-secret
+backend/.env
+backend/galeria.backup*.db
+backend/galeria.db-*
 .superpowers/
-server/uploads/*
-!server/uploads/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
 
 # Editor directories and files
 .vscode/*

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { loginSchema } from '../../../shared/validation.js';
+import { loginSchema } from '../../shared/validation.js';
 import { Field, PasswordInput } from '../../components/ui/Field';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';

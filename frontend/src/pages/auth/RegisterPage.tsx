@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { registerSchema } from '../../../shared/validation.js';
+import { registerSchema } from '../../shared/validation.js';
 import { authApi } from '../../api';
 import { Field, PasswordInput } from '../../components/ui/Field';
 import { Icon } from '../../components/ui/Icon';
