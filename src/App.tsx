@@ -1,144 +1,112 @@
-import { useEffect, useMemo, useState } from 'react';
-import { api } from './api';
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
+import { Suspense, lazy, useEffect } from 'react';
+import { Footer, Navbar } from './components/layout/Navbar';
+import { ProtectedRoute } from './components/layout/ProtectedRoute';
+import { SidebarLayout } from './components/layout/SidebarLayout';
+import type { SidebarLink } from './components/layout/SidebarLayout';
 import { useAuth } from './context/AuthContext';
-import { Navbar } from './components/Navbar';
-import { FeaturedSection } from './components/FeaturedSection';
-import { Gallery } from './components/Gallery';
-import { AuthModal } from './components/AuthModal';
-import { UploadModal } from './components/UploadModal';
-import { PhotoModal } from './components/PhotoModal';
-import type { Photo } from './types';
+import { HomePage } from './pages/public/HomePage';
+import { ProjectPage } from './pages/public/ProjectPage';
+import { UserPage } from './pages/public/UserPage';
+import { NotFoundPage } from './pages/public/NotFoundPage';
+import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
+import { Spinner } from './components/ui/Feedback';
+
+// Dashboard y admin se cargan bajo demanda: incluyen las gráficas (recharts), que el
+// visitante de la galería pública no necesita descargar.
+const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome').then((m) => ({ default: m.DashboardHome })));
+const MyProjects = lazy(() => import('./pages/dashboard/MyProjects').then((m) => ({ default: m.MyProjects })));
+const ProjectForm = lazy(() => import('./pages/dashboard/ProjectForm').then((m) => ({ default: m.ProjectForm })));
+const MyProfile = lazy(() => import('./pages/dashboard/MyProfile').then((m) => ({ default: m.MyProfile })));
+const AdminHome = lazy(() => import('./pages/admin/AdminHome').then((m) => ({ default: m.AdminHome })));
+const AdminProjects = lazy(() => import('./pages/admin/AdminProjects').then((m) => ({ default: m.AdminProjects })));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers').then((m) => ({ default: m.AdminUsers })));
+const AdminComments = lazy(() => import('./pages/admin/AdminComments').then((m) => ({ default: m.AdminComments })));
+
+const DASHBOARD_LINKS: SidebarLink[] = [
+  { to: '/dashboard', label: 'Resumen', icon: 'chart', end: true },
+  { to: '/dashboard/proyectos', label: 'Mis proyectos', icon: 'folder', end: true },
+  { to: '/dashboard/proyectos/nuevo', label: 'Nuevo proyecto', icon: 'plus' },
+  { to: '/dashboard/perfil', label: 'Mi perfil', icon: 'user' },
+];
+
+const ADMIN_LINKS: SidebarLink[] = [
+  { to: '/admin', label: 'Resumen', icon: 'chart', end: true },
+  { to: '/admin/proyectos', label: 'Proyectos', icon: 'folder' },
+  { to: '/admin/usuarios', label: 'Usuarios', icon: 'users' },
+  { to: '/admin/comentarios', label: 'Comentarios', icon: 'comment' },
+];
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => window.scrollTo(0, 0), [pathname]);
+  return null;
+}
+
+function GuestOnly() {
+  const { user, loading } = useAuth();
+  if (!loading && user) return <Navigate to="/dashboard" replace />;
+  return <Outlet />;
+}
 
 export function App() {
-  const { loading: authLoading } = useAuth();
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [featured, setFeatured] = useState<Photo[]>([]);
-  const [loadingPhotos, setLoadingPhotos] = useState(true);
-  const [category, setCategory] = useState('Todas');
-  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
-  const [showUpload, setShowUpload] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  async function loadData() {
-    setLoadingPhotos(true);
-    setLoadError(null);
-    try {
-      const [allPhotos, featuredPhotos] = await Promise.all([
-        api.listPhotos(),
-        api.listFeatured(),
-      ]);
-      setPhotos(allPhotos);
-      setFeatured(featuredPhotos);
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'No se pudieron cargar las fotos');
-    } finally {
-      setLoadingPhotos(false);
-    }
-  }
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const categories = useMemo(() => {
-    const unique = new Set(photos.map((p) => p.category));
-    return ['Todas', ...Array.from(unique).sort()];
-  }, [photos]);
-
-  const visiblePhotos = useMemo(
-    () => (category === 'Todas' ? photos : photos.filter((p) => p.category === category)),
-    [photos, category],
-  );
-
-  function applyPhotoUpdate(id: number, updater: (photo: Photo) => Photo) {
-    setPhotos((prev) => prev.map((p) => (p.id === id ? updater(p) : p)));
-    setFeatured((prev) => prev.map((p) => (p.id === id ? updater(p) : p)));
-    setSelectedPhoto((prev) => (prev && prev.id === id ? updater(prev) : prev));
-  }
-
-  async function handleToggleLike(photo: Photo) {
-    const optimistic = {
-      likedByMe: !photo.likedByMe,
-      likeCount: photo.likeCount + (photo.likedByMe ? -1 : 1),
-    };
-    applyPhotoUpdate(photo.id, (p) => ({ ...p, ...optimistic }));
-
-    try {
-      const result = await api.toggleLike(photo.id);
-      applyPhotoUpdate(photo.id, (p) => ({
-        ...p,
-        likedByMe: result.liked,
-        likeCount: result.likeCount,
-      }));
-    } catch {
-      applyPhotoUpdate(photo.id, (p) => ({
-        ...p,
-        likedByMe: photo.likedByMe,
-        likeCount: photo.likeCount,
-      }));
-    }
-  }
-
-  function handleUploaded(photo: Photo) {
-    setPhotos((prev) => [photo, ...prev]);
-  }
-
-  function handleDeleted(photoId: number) {
-    setPhotos((prev) => prev.filter((p) => p.id !== photoId));
-    setFeatured((prev) => prev.filter((p) => p.id !== photoId));
-  }
+  const { isSuperadmin } = useAuth();
 
   return (
-    <>
-      <Navbar onOpenAuth={() => setShowAuth(true)} onOpenUpload={() => setShowUpload(true)} />
+    <div className="app">
+      <ScrollToTop />
+      <Navbar />
+      <main className="main">
+        <Suspense fallback={<Spinner />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/proyectos/:id" element={<ProjectPage />} />
+          <Route path="/usuarios/:username" element={<UserPage />} />
 
-      <main className="page">
-        {authLoading || loadingPhotos ? (
-          <p className="muted center">Cargando galería…</p>
-        ) : loadError ? (
-          <p className="form-error center">{loadError}</p>
-        ) : (
-          <>
-            <FeaturedSection
-              photos={featured}
-              onOpen={setSelectedPhoto}
-              onToggleLike={handleToggleLike}
-            />
+          <Route element={<GuestOnly />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/registro" element={<RegisterPage />} />
+          </Route>
 
-            <section className="category-tabs">
-              {categories.map((c) => (
-                <button
-                  key={c}
-                  className={c === category ? 'active' : ''}
-                  onClick={() => setCategory(c)}
-                >
-                  {c}
-                </button>
-              ))}
-            </section>
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <SidebarLayout title="Mi dashboard" subtitle="Tu espacio" links={DASHBOARD_LINKS} />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<DashboardHome />} />
+            <Route path="proyectos" element={<MyProjects />} />
+            <Route path="proyectos/nuevo" element={<ProjectForm />} />
+            <Route path="proyectos/:id/editar" element={<ProjectForm />} />
+            <Route path="perfil" element={<MyProfile />} />
+          </Route>
 
-            <Gallery
-              photos={visiblePhotos}
-              onOpen={setSelectedPhoto}
-              onToggleLike={handleToggleLike}
-            />
-          </>
-        )}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute role="admin">
+                <SidebarLayout
+                  title="Administración"
+                  subtitle={isSuperadmin ? '★ Admin principal' : 'Administrador'}
+                  links={ADMIN_LINKS}
+                />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<AdminHome />} />
+            <Route path="proyectos" element={<AdminProjects />} />
+            <Route path="usuarios" element={<AdminUsers />} />
+            <Route path="comentarios" element={<AdminComments />} />
+          </Route>
+
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+        </Suspense>
       </main>
-
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
-      {showUpload && (
-        <UploadModal onClose={() => setShowUpload(false)} onUploaded={handleUploaded} />
-      )}
-      {selectedPhoto && (
-        <PhotoModal
-          photo={selectedPhoto}
-          onClose={() => setSelectedPhoto(null)}
-          onToggleLike={handleToggleLike}
-          onDeleted={handleDeleted}
-        />
-      )}
-    </>
+      <Footer />
+    </div>
   );
 }
