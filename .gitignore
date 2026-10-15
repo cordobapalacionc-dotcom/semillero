@@ -17,6 +17,10 @@ dist-ssr
 server/node_modules
 server/galeria.db
 server/.jwt-secret
+server/.env
+server/galeria.backup*.db
+server/galeria.db-*
+.superpowers/
 server/uploads/*
 !server/uploads/.gitkeep
 

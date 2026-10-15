@@ -1,0 +1,124 @@
+/* ---------- Dashboard del usuario ---------- */
+.activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.activity-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.activity-list li:last-child {
+  border-bottom: none;
+}
+.activity-list li > div {
+  flex: 1;
+  min-width: 0;
+}
+.activity-quote {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+}
+.manage-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+  transition: border-color 0.15s;
+}
+.manage-card:hover {
+  border-color: var(--border-strong);
+}
+.manage-card .project-cover {
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--border);
+}
+.manage-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px 4px;
+  min-width: 0;
+}
+.manage-body strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.manage-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 0.8rem;
+}
+.manage-stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.manage-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 6px 8px 8px;
+}
+.cell-title > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.cell-title .muted {
+  font-size: 0.8rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  font-size: 0.85rem;
+}
+
+/* ---------- Panel admin ---------- */
+.cell-button {
+  text-align: left;
+}
+.cell-button:hover strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.comment-cell {
+  max-width: 420px;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.preview-photos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.preview-photos img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
