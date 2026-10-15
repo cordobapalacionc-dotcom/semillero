@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { emailSchema, passwordSchema, usernameSchema } from '../../../shared/validation.js';
+import { emailSchema, passwordSchema, usernameSchema } from '../../shared/validation.js';
 
 // Crea el administrador principal a partir de las variables de .env si todavía no existe.
 // Nunca sobrescribe la contraseña de uno existente.

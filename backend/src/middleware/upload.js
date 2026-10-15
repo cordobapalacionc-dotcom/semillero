@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import multer from 'multer';
-import { LIMITS } from '../../../shared/validation.js';
+import { LIMITS } from '../../shared/validation.js';
 import { HttpError } from './errors.js';
 import { detectImageType, newFilename, removeFiles } from '../services/files.js';
 

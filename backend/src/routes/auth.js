@@ -6,7 +6,7 @@ import {
   loginSchema,
   profileSchema,
   registerSchema,
-} from '../../../shared/validation.js';
+} from '../../shared/validation.js';
 import { HttpError } from '../middleware/errors.js';
 import { validate } from '../middleware/validate.js';
 import { ACCOUNT_SUSPENDED, signToken } from '../middleware/auth.js';

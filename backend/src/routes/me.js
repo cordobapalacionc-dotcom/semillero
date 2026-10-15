@@ -6,7 +6,7 @@ import {
   photoOrderSchema,
   projectSchema,
   projectUpdateSchema,
-} from '../../../shared/validation.js';
+} from '../../shared/validation.js';
 import { transaction } from '../db.js';
 import { HttpError } from '../middleware/errors.js';
 import { parseId, validate } from '../middleware/validate.js';

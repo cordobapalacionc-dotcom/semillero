@@ -13,7 +13,7 @@ Diseño en **blanco y negro** (con modo oscuro): las fotos son el único color d
 1. [Funcionalidades](#funcionalidades)
 2. [Requisitos](#requisitos)
 3. [Instalación y arranque](#instalación-y-arranque)
-4. [Configuración (`server/.env`)](#configuración-serverenv)
+4. [Configuración (`backend/.env`)](#configuración-backendenv)
 5. [Administrador principal](#administrador-principal)
 6. [Roles y permisos](#roles-y-permisos)
 7. [Reglas de validación](#reglas-de-validación)
@@ -87,13 +87,17 @@ Diseño en **blanco y negro** (con modo oscuro): las fotos son el único color d
 
 ## Instalación y arranque
 
-```bash
-# 1. Dependencias (las dos son necesarias: la raíz también provee zod a shared/)
-npm install
-npm install --prefix server
+`frontend/` y `backend/` son dos proyectos npm **independientes y autocontenidos** (cada uno
+con su propio `package.json`): se pueden instalar, construir y desplegar por separado. El
+`package.json` de la raíz es solo un **orquestador de desarrollo** (no tiene código propio).
 
-# 2. Configuración: copia la plantilla y edítala (sobre todo ADMIN_PASSWORD)
-cp server/.env.example server/.env
+```bash
+# 1. Dependencias de los tres proyectos (raíz, frontend y backend)
+npm install
+npm run install:all
+
+# 2. Configuración del backend: copia la plantilla y edítala (sobre todo ADMIN_PASSWORD)
+cp backend/.env.example backend/.env
 
 # 3. Arranca frontend + backend juntos
 npm run dev:all
@@ -102,20 +106,21 @@ npm run dev:all
 - Frontend: `http://localhost:5173`
 - API: `http://localhost:4000` (Vite reenvía `/api` y `/uploads` a este puerto)
 
-También se pueden correr por separado: `npm run dev` (frontend) y `npm run server` (backend).
+También se pueden correr por separado: `npm run dev` (frontend) y `npm run server` (backend),
+o entrando a cada carpeta (`cd frontend && npm run dev` / `cd backend && npm run dev`).
 
-## Configuración (`server/.env`)
+## Configuración (`backend/.env`)
 
 | Variable | Por defecto | Descripción |
 |---|---|---|
 | `PORT` | `4000` | Puerto de la API |
 | `CORS_ORIGIN` | `http://localhost:5173` | Origen permitido para peticiones del navegador |
-| `JWT_SECRET` | (generado) | Secreto para firmar las sesiones. Si se deja vacío se genera uno y se guarda en `server/.jwt-secret` |
+| `JWT_SECRET` | (generado) | Secreto para firmar las sesiones. Si se deja vacío se genera uno y se guarda en `backend/.jwt-secret` |
 | `ADMIN_USERNAME` | — | Usuario del administrador principal |
 | `ADMIN_EMAIL` | — | Correo del administrador principal |
 | `ADMIN_PASSWORD` | — | Contraseña inicial del administrador principal (mín. 8, letras y números) |
 
-`server/.env` no se sube a git. `server/.env.example` es la plantilla.
+`backend/.env` no se sube a git. `backend/.env.example` es la plantilla.
 
 ## Administrador principal
 
@@ -147,7 +152,7 @@ También se pueden correr por separado: `npm run dev` (frontend) y `npm run serv
 | Suspender, reactivar o eliminar **otros admins** | | | | ✓ |
 | Dar o quitar el rol de admin | | | | ✓ |
 
-Reglas de la jerarquía (se aplican en el servidor, en `server/src/services/permissions.js`):
+Reglas de la jerarquía (se aplican en el servidor, en `backend/src/services/permissions.js`):
 
 1. **Nadie** puede suspender, eliminar ni cambiar el rol del admin principal, ni siquiera él mismo.
 2. Nadie puede actuar sobre su propia cuenta desde el panel.
@@ -159,7 +164,10 @@ dejan de verse en la galería pública y en su perfil (el panel admin sí los mu
 
 ## Reglas de validación
 
-Las mismas reglas se usan en el navegador y en el servidor (`shared/validation.js`).
+Las mismas reglas se usan en el navegador y en el servidor: `frontend/src/shared/validation.js`
+y `backend/shared/validation.js` son la **misma lógica duplicada a propósito** (esquemas de
+Zod), porque frontend y backend se despliegan por separado y no comparten disco en producción.
+Si cambias una regla, actualiza las dos copias.
 
 | Campo | Regla |
 |---|---|
@@ -240,7 +248,7 @@ Las listas paginadas devuelven `{ items, total, page, pageSize }` (12 por págin
 
 ## Base de datos
 
-SQLite en `server/galeria.db` (no se sube a git). Las tablas se crean solas al arrancar.
+SQLite en `backend/galeria.db` (no se sube a git). Las tablas se crean solas al arrancar.
 
 | Tabla | Contenido |
 |---|---|
@@ -252,43 +260,59 @@ SQLite en `server/galeria.db` (no se sube a git). Las tablas se crean solas al a
 
 - Al borrar un proyecto o un usuario se borra en cascada todo lo relacionado **y los archivos de imagen del disco**.
 - **Base de datos de la versión anterior:** si al arrancar se detecta el esquema viejo (fotos sueltas, usuarios sin
-  correo), el archivo se renombra a `server/galeria.backup.db` y se crea una base de datos nueva. No se borra nada.
-- Las imágenes viven en `server/uploads/` (tampoco se suben a git).
+  correo), el archivo se renombra a `backend/galeria.backup.db` y se crea una base de datos nueva. No se borra nada.
+- Las imágenes viven en `backend/uploads/` (tampoco se suben a git).
 
 ## Estructura del proyecto
 
+`frontend/` y `backend/` son dos proyectos separados (cada uno con su propio `package.json`,
+`node_modules` y ciclo de vida), pensados para desplegarse de forma independiente — por ejemplo
+el frontend como sitio estático y el backend como servicio Node con disco persistente. El
+`package.json` de la raíz solo orquesta el modo desarrollo (`npm run dev:all`); no es parte de
+ninguno de los dos proyectos.
+
 ```
 galeria/
-  shared/validation.js        Esquemas zod compartidos (cliente y servidor)
-  server/
-    .env.example              Plantilla de configuración
+  package.json                 Orquestador de desarrollo (concurrently); sin código propio
+  frontend/
+    index.html, vite.config.ts, tsconfig*.json
     src/
-      index.js                Arranque: config → BD → admin principal → app
-      app.js                  createApp(ctx): middlewares y rutas
-      config.js, db.js        Configuración y esquema SQLite
-      middleware/             auth (sesión y roles), errors, validate, upload
-      services/               permissions (jerarquía), projects, stats, files, dto, seed
-      routes/                 auth, projects, users, me, admin
-    test/                     Pruebas (node:test + supertest)
-  src/
-    api/                      Cliente HTTP (manejo de errores, subida con progreso)
-    context/                  Sesión, tema y notificaciones
-    hooks/                    useAsync, useForm, useQueryState, useUnsavedChanges…
-    lib/                      Formatos y copia de las reglas de permisos
-    components/               ui/ (tabla, modal, tarjetas…), layout/, projects/, charts/
-    pages/                    public/, auth/, dashboard/, admin/
-    styles/                   tokens (colores), base, componentes y páginas
+      shared/validation.js     Copia de los esquemas zod (ver "Reglas de validación")
+      api/                     Cliente HTTP (manejo de errores, subida con progreso)
+      context/                 Sesión, tema y notificaciones
+      hooks/                   useAsync, useForm, useQueryState, useUnsavedChanges…
+      lib/                     Formatos y copia de las reglas de permisos
+      components/              ui/ (tabla, modal, tarjetas…), layout/, projects/, charts/
+      pages/                   public/, auth/, dashboard/, admin/
+      styles/                  tokens (colores), base, componentes y páginas
+  backend/
+    .env.example               Plantilla de configuración
+    shared/validation.js       Copia de los esquemas zod (ver "Reglas de validación")
+    src/
+      index.js                 Arranque: config → BD → admin principal → app
+      app.js                   createApp(ctx): middlewares y rutas
+      config.js, db.js         Configuración y esquema SQLite
+      middleware/               auth (sesión y roles), errors, validate, upload
+      services/                 permissions (jerarquía), projects, stats, files, dto, seed
+      routes/                   auth, projects, users, me, admin
+    test/                       Pruebas (node:test + supertest)
 ```
 
 ## Scripts
 
+Desde la raíz (orquestador):
+
 | Comando | Qué hace |
 |---|---|
+| `npm run install:all` | Instala dependencias de `frontend/` y `backend/` |
 | `npm run dev:all` | Frontend y backend juntos |
 | `npm run dev` | Solo frontend (Vite) |
 | `npm run server` | Solo backend (se reinicia al guardar cambios) |
-| `npm run build` | Revisa tipos y genera el frontend en `dist/` |
-| `npm test` | Pruebas del servidor |
+| `npm run build` | Revisa tipos y genera el frontend en `frontend/dist/` |
+| `npm test` | Pruebas del backend |
+
+También puedes entrar a cada carpeta y usar sus scripts propios (`frontend/package.json`:
+`dev`, `build`, `preview`; `backend/package.json`: `dev`, `start`, `test`).
 
 ## Pruebas
 
@@ -320,11 +344,12 @@ incluido que los archivos se borren del disco.
 |---|---|
 | `http proxy error … ECONNREFUSED` en la consola de Vite | El backend no está corriendo. Usa `npm run dev:all` o `npm run server` |
 | Error sobre `node:sqlite` al arrancar el servidor | Node es anterior a 22.5. Actualiza Node (`node -v`) |
-| `[seed] No hay administrador principal…` | Falta `server/.env` o alguna variable `ADMIN_*`. Copia `.env.example` y reinicia |
-| `Cannot find package 'zod'` al arrancar el servidor | Falta `npm install` en la raíz de `galeria/` (la carpeta `shared/` usa esas dependencias) |
+| `[seed] No hay administrador principal…` | Falta `backend/.env` o alguna variable `ADMIN_*`. Copia `.env.example` y reinicia |
+| `Cannot find package 'zod'` al arrancar el servidor | Falta `npm install --prefix backend` (o `npm run install:all` desde la raíz) |
+| `Cannot find module '.../shared/validation.js'` | `frontend/` y `backend/` tienen cada uno su **propia copia** de `shared/validation.js` (ver "Reglas de validación"); revisa que la ruta relativa del import apunte a la copia de su propia carpeta, no a la del otro proyecto |
 | `EADDRINUSE :::4000` | Ya hay un servidor corriendo en ese puerto. Ciérralo o cambia `PORT` |
-| Desapareció mi contenido viejo | La base de datos anterior se respaldó en `server/galeria.backup.db` |
+| Desapareció mi contenido viejo | La base de datos anterior se respaldó en `backend/galeria.backup.db` |
 | "No se encuentra localhost" / el navegador no conecta | Ningún servidor está corriendo (comprueba con `npm run dev:all`), o quedó un proceso viejo colgado en el puerto. En Windows: `netstat -ano \| findstr :5173` (o `:4000`) para ver el PID y `taskkill /PID <pid> /F` para cerrarlo; luego vuelve a arrancar |
-| El backend se reinicia solo en bucle (`Change detected in '...node_modules...'`) | Si el proyecto vive dentro de OneDrive, la sincronización toca archivos de `node_modules` y `node --watch` lo detecta como cambio. Ya está resuelto: `server/package.json` usa `node --watch-path=src` para vigilar solo el código propio |
-| Pantalla de error al navegar entre páginas (`destroy is not a function`) | Bug ya corregido: el `useEffect` de `<ScrollToTop>` en `src/App.tsx` devolvía el resultado de `window.scrollTo(...)` en vez de nada, y React lo interpretaba como función de limpieza |
+| El backend se reinicia solo en bucle (`Change detected in '...node_modules...'`) | Si el proyecto vive dentro de OneDrive, la sincronización toca archivos de `node_modules` y `node --watch` lo detecta como cambio. Ya está resuelto: `backend/package.json` usa `node --watch-path=src` para vigilar solo el código propio |
+| Pantalla de error al navegar entre páginas (`destroy is not a function`) | Bug ya corregido: el `useEffect` de `<ScrollToTop>` en `frontend/src/App.tsx` devolvía el resultado de `window.scrollTo(...)` en vez de nada, y React lo interpretaba como función de limpieza |
 | `[API] Failed running 'src/index.js'. Waiting for file changes before restarting…` | Hay **más de un `npm run dev:all` corriendo a la vez** (por ejemplo, uno en la terminal de VS Code y otro ya abierto antes) y están peleando por el puerto 4000: el segundo pierde y se queda esperando. Revisa si tienes varias terminales con `dev:all` abiertas y cierra las repetidas; en Windows puedes ver todos los procesos con `Get-CimInstance Win32_Process -Filter "name='node.exe'"` y cerrar los que sobren con `taskkill /PID <pid> /F`. Solo debe quedar **una** instancia |

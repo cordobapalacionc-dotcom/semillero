@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { LIMITS, projectSchema } from '../../../shared/validation.js';
+import { LIMITS, projectSchema } from '../../shared/validation.js';
 import { meApi, projectsApi } from '../../api';
 import { PageHeader } from '../../components/layout/SidebarLayout';
 import { CategoryInput } from '../../components/projects/CategoryInput';

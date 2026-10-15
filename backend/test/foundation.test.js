@@ -7,7 +7,7 @@ import { DatabaseSync } from 'node:sqlite';
 import request from 'supertest';
 import { openDb } from '../src/db.js';
 import { makeTestApp } from './helpers.js';
-import { registerSchema } from '../../shared/validation.js';
+import { registerSchema } from '../shared/validation.js';
 
 function tables(db) {
   return db

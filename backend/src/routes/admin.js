@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { adminListQuerySchema, bulkIdsSchema } from '../../../shared/validation.js';
+import { adminListQuerySchema, bulkIdsSchema } from '../../shared/validation.js';
 import { transaction } from '../db.js';
 import { HttpError } from '../middleware/errors.js';
 import { parseId, validate } from '../middleware/validate.js';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { LIMITS, changePasswordSchema, profileSchema } from '../../../shared/validation.js';
+import { LIMITS, changePasswordSchema, profileSchema } from '../../shared/validation.js';
 import { authApi } from '../../api';
 import { PageHeader } from '../../components/layout/SidebarLayout';
 import { Badge } from '../../components/ui/Feedback';

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { commentSchema, listQuerySchema } from '../../../shared/validation.js';
+import { commentSchema, listQuerySchema } from '../../shared/validation.js';
 import { HttpError } from '../middleware/errors.js';
 import { ADMIN_ROLES } from '../middleware/auth.js';
 import { parseId, validate } from '../middleware/validate.js';

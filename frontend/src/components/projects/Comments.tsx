@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LIMITS } from '../../../shared/validation.js';
+import { LIMITS } from '../../shared/validation.js';
 import { projectsApi } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
